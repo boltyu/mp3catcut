@@ -1,0 +1,60 @@
+4.  Why cant MP3 files be seamlessly spliced together?
+
+There are several reasons this is *very* difficult (but not impossible):
+
+The MP3 data for frame N is not stored in frame N, but can be spread
+over several frames.  In a typical case, the data for frame N will
+have 20% of it stored in frame N-1 and 80% stored in frame N.  
+If the encoder builds up a large bit reservoir, 
+the data for frame N can actually be stored 4088 bits back in
+the bitstream.  Then if a very hard-to-encode passage comes up,
+then the encoder is free to use the normal bits for this frame
+plus up to 4088 more.  The resulting data will then take up
+several frames.   The starting negative offset
+in the bitstream for the data associated with a given frame in bytes is
+given by main_data_begin. 
+
+Thus chopping a mp3 file on a frame boundary will almost always result
+in the corruption of the data in that frame.   mpg123 will report
+such errors as "cant seek past beginning of file" or something
+like that.  
+
+A proper cut-and-past job could be done, but it would have to 
+separate all the data from the frame headers, and then 
+replace the frame headers in the correct location in the new
+stream.  One problem:  this may generate data for frame N that
+is stored too far back, say 4100 bits back.  In that case, the
+main_data_begin field will be incorrect since it can be at most 4088.
+
+Two possible solutions: 
+
+1. Create mp3's with the --nores option in LAME,
+(disabling the bit reservoir and reducing quality somewhat),
+these mp3 files can be simply cut and pasted on frame boundaries.
+
+2. Use VBR and overlapping encodes.  For example:
+   stream A = encode frames 0-99
+   stream B = encode frames 97-200
+
+   First remove the frames 97,98 and 99 from stream B.  It is
+   important to use overlapping encoding because of the
+   psycho-acoustics.  Then take frame 100 in stream B.  Most of the
+   time, some data for frame 100 will be stored in frame 99.  Take a
+   look at frame 99 from stream A.  If there is enough space, take the
+   frame100 data which was stored in stream B/frame 99, and store it
+   in stream A/frame 99.  If there is not enough space, replace frame
+   100 with a higher bitrate frame to make enough space.
+
+   Now stream A and stream B can be concatenated together.  
+
+
+Note that MP3 stores MDCT coefficients which represent 1152 samples,
+but they are overlapped by 50%.  So for example:
+
+frame N     <  0...1152    >
+frame N+1         <  576...1727   >
+frame N+2                  <   1152...2304   >
+
+You need to add all the data together to complete the frame.  The
+complete frame of samples 576-1727 needs frame N, N+1 and N+2.
+
