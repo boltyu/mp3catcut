@@ -1,6 +1,3 @@
-an test on lib minimp3
-
-
 拖拽文件到程序中，
 
 左键点击左下角的时间，可以设置裁剪MP3的区间
@@ -9,6 +6,8 @@ an test on lib minimp3
 
 
 # mp3catcut
+
+an test on lib minimp3
 
 mp3 cat&amp;cut tool , 
 
