@@ -5,6 +5,10 @@
 输出文件和程序在同一目录下
 
 
+# 已知問題
+  
+  不同比特率的多個文件、以及具有‘lame’ (or xing)的文件合成后，縂歌曲時間沒有正確計算
+
 # mp3catcut
 
 an test on lib minimp3
